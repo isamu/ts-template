@@ -1,16 +1,16 @@
-# Minimal Node.js CI — runs lint / build / test on pull_request + push
-# to master. Modeled on the mulmocast-cli pattern (single job matrix,
-# yarn cache, no OS matrix).
+# Minimal Node.js CI — runs typecheck / lint / build / test on
+# pull_request + push to main. Modeled on the mulmoclaude pattern
+# (yarn cache, action pins at v6, persist-credentials disabled).
 
 name: Node.js CI
 
 on:
   pull_request:
     branches:
-      - master
+      - main
   push:
     branches:
-      - master
+      - main
 
 permissions:
   contents: read
@@ -22,9 +22,11 @@ jobs:
       matrix:
         node-version: [22.x, 24.x]
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v5
+      uses: actions/setup-node@v6
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'yarn'
@@ -34,5 +36,7 @@ jobs:
         path: node_modules
         key: node-modules-${{ matrix.node-version }}-${{ hashFiles('yarn.lock') }}
     - run: yarn install --frozen-lockfile
+    - run: yarn run typecheck
+    - run: yarn run lint
     - run: yarn run build
     - run: yarn run test
